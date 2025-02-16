@@ -37,7 +37,13 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastLogin;
 
-    private boolean isActive;
+    @Getter
+    @Setter
+    @Column(name = "is_active")
+    private boolean active;
+
+    @Column(nullable = false, unique = true)
+    private String telephoneNumber;
 
     @Lob
     private byte[] avatar; // Remplacement de Blob par byte[]
@@ -47,4 +53,5 @@ public class User {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "message", cascade = CascadeType.ALL)
     private List<Message> messageList;
+
 }
