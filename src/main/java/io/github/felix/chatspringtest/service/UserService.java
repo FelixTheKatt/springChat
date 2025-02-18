@@ -3,8 +3,8 @@ package io.github.felix.chatspringtest.service;
 import io.github.felix.chatspringtest.dto.UserDto;
 import io.github.felix.chatspringtest.entity.User;
 import io.github.felix.chatspringtest.exception.userException.UserNotFoundException;
-import io.github.felix.chatspringtest.mapper.UserMapper;
 import io.github.felix.chatspringtest.repository.UserRepository;
+import io.github.felix.chatspringtest.utils.mapper.GenericMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,17 +22,16 @@ import java.util.stream.Collectors;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
 
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(userMapper::toDto)
+                .map(user -> GenericMapper.map(user,UserDto.class))
                 .collect(Collectors.toList());
     }
 
     public UserDto getUserById(Long id) {
         return userRepository.findById(id)
-                .map(userMapper::toDto)
+                .map(user -> GenericMapper.map(user,UserDto.class))
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + id));
     }
 
@@ -42,10 +41,17 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public UserDto createUser(UserDto userDTO) {
-        User user = userMapper.toEntity(userDTO);
+        // Mapper UserDto vers User (Entity)
+        User user = GenericMapper.map(userDTO, User.class);
+
+        // Définir une valeur supplémentaire
         user.setActive(true);
+
+        // Sauvegarde en base de données
         user = userRepository.save(user);
-        return userMapper.toDto(user);
+
+        // Mapper User (Entity) vers UserDto avant de retourner
+        return GenericMapper.map(user, UserDto.class);
     }
 
     @Transactional
@@ -55,7 +61,7 @@ public class UserService implements UserDetailsService {
             existingUser.setEmail(userDto.getEmail());
             existingUser.setActive(userDto.isActive());
             userRepository.save(existingUser);
-            return userMapper.toDto(existingUser);
+            return GenericMapper.map(existingUser, UserDto.class);
         });
     }
 
